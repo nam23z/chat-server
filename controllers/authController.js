@@ -11,6 +11,7 @@ const filterObj = require("../utils/filterObj");
 // Model
 const User = require("../models/user");
 const otp = require("../Templates/Mail/otp");
+const resetPassword = require("../Templates/Mail/resetPassword");
 
 const { promisify } = require("util");
 
@@ -259,10 +260,18 @@ exports.forgotPassword = async (req, res, next) => {
 
   
   try {
-    const resetURL = `https://tawk.com/auth/reset-password/?code=${resetToken}`;
-
-    console.log(resetToken);
+    const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
+    
     //TODO => send mail with reset url
+
+    mailService.sendMail({
+      from: "namnguyencong23@gmail.com",
+      to: user.email,
+      subject: "Reset Password",
+      html: resetPassword(user.firstName, resetURL),
+      attachments: [],
+    });
+
     res.status(200).json({
       status: "success",
       message: "Reset password link sent to your email",
