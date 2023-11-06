@@ -2,6 +2,8 @@ const app = require("./app");
 
 const mongoose = require("mongoose");
 
+const path = require("path");
+
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 
@@ -51,7 +53,7 @@ io.on("connection", async (socket) => {
   console.log(`User connected ${socket_id}`);
 
   if (Boolean(user_id)) {
-    await User.findByIdAndUpdate(user_id, { socket_id });
+    await User.findByIdAndUpdate(user_id, { socket_id, status: "Online" });
   }
 
   //can write our socket event listeners here...
@@ -108,10 +110,57 @@ io.on("connection", async (socket) => {
     });
   });
 
-  socket.on("end", function(){
-    console.log("closing connection");
+  //Handle text/link messages
+
+  socket.on("text_message", (data) => {
+    console.log("Received Message", data);
+
+    //data: {to, from, text}
+
+    //create a new conversation if it doesn't exist yet or add new message to the message list
+
+    //save to db
+
+    //emit incoming_message -> to user
+
+    //emit outgoing_message -> from user
+  });
+
+  socket.on("file_message", (data) => {
+    console.log("Received Message", data);
+
+    //data: {to, from, text, file}
+
+    //get the file extension
+
+    const fileExtension = path.extname(data.file.name);
+
+    //generate a unique file name
+
+    const fileName = `${Date.now()}_${Math.floor(
+      Math.random() * 10000
+    )}${fileExtension}`;
+
+    //upload file to aws s3
+
+    //create a new conversation if it doesn't exist yet or add new message to the message list
+
+    //save to db
+
+    //emit incoming_message -> to user
+
+    //emit outgoing_message -> from user
+  });
+
+  socket.on("end", async (data) => {
+    //Find user by _id and set the status to Offline
+    if (data.user_id) {
+      await User.findByIdAndUpdate(data.user_id, { status: "Offline" });
+    }
+    // TODO => Broadcast user_disconnected
+    console.log("Closing connection");
     socket.disconnect(0);
-  })
+  });
 });
 
 process.on("unhandledRejection", (err) => {
