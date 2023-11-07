@@ -2,6 +2,8 @@ const app = require("./app");
 
 const mongoose = require("mongoose");
 
+const generateUniqueId = require("generate-unique-id");
+
 const path = require("path");
 
 const dotenv = require("dotenv");
@@ -148,7 +150,8 @@ io.on("connection", async (socket) => {
         participants: [to, from],
       });
 
-      new_chat = await OnetoOneMessage.findById(new_chat).populate(// new_chat._id
+      new_chat = await OneToOneMessage.findById(new_chat).populate(
+        // new_chat._id
         "participants",
         "firstName lastName _id email status"
       );
@@ -259,3 +262,9 @@ process.on("unhandledRejection", (err) => {
     process.exit(1);
   });
 });
+
+// setInterval(async () => {
+//   const event = generateUniqueId();
+
+//   console.log(event);
+// }, 1000);
