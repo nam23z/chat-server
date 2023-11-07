@@ -97,6 +97,14 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew || !this.password)
+    return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 userSchema.methods.correctPassword = async function (
   canditatePassword,
   userPassword
@@ -106,6 +114,19 @@ userSchema.methods.correctPassword = async function (
 
 userSchema.methods.correctOTP = async function (canditateOTP, userOTP) {
   return await bcrypt.compare(canditateOTP, userOTP);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return JWTTimeStamp < changedTimeStamp;
+  }
+
+  // FALSE MEANS NOT CHANGED
+  return false;
 };
 
 userSchema.methods.createPasswordResetToken = function () {
@@ -121,9 +142,6 @@ userSchema.methods.createPasswordResetToken = function () {
   return resetToken;
 };
 
-userSchema.methods.changedPasswordAfter = function (timestamp) {
-  return timestamp < this.passwordChangedAt;
-};
 
 const User = new mongoose.model("User", userSchema);
 
