@@ -1,32 +1,32 @@
-const app = require("./app");
-
 const mongoose = require("mongoose");
-
-const generateUniqueId = require("generate-unique-id");
-
-const path = require("path");
-
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env" });
 
-const { Server } = require("socket.io");
+
+// const generateUniqueId = require("generate-unique-id");
+
+const path = require("path");
+
+
 
 process.on("uncaughtException", (err) => {
   console.log(err);
   process.exit(1); // Exit code 1 indicates that a container shut down
 });
-
+const app = require("./app");
 const http = require("http");
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+
 const { error } = require("console");
 const User = require("./models/user");
 const FriendRequest = require("./models/friendRequest");
 const OneToOneMessage = require("./models/OneToOneMessage");
 
-const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -55,9 +55,6 @@ io.on("connection", async (socket) => {
 
   console.log(`User connected ${socket.id}`);
 
-  // if (Boolean(user_id)) {
-  //   await User.findByIdAndUpdate(user_id, { socket_id, status: "Online" });
-  // }
   if (user_id != null && Boolean(user_id)) {
     try {
       User.findByIdAndUpdate(user_id, {
@@ -86,11 +83,11 @@ io.on("connection", async (socket) => {
 
     //TODO => create a friend request
     // emit event => new_friend_request
-    io.to(to_user.socket_id).emit("new_friend_request", {
+    io.to(to_user?.socket_id).emit("new_friend_request", {
       message: "New Friend Request Received",
     });
     //emit event => request_sent
-    io.to(from_user.socket_id).emit("request_sent", {
+    io.to(from_user?.socket_id).emit("request_sent", {
       message: "Request sent successfully!",
     });
   });
@@ -151,7 +148,6 @@ io.on("connection", async (socket) => {
       });
 
       new_chat = await OneToOneMessage.findById(new_chat).populate(
-        // new_chat._id
         "participants",
         "firstName lastName _id email status"
       );
@@ -244,6 +240,8 @@ io.on("connection", async (socket) => {
 
     //emit outgoing_message -> from user
   });
+
+  // -------------- HANDLE SOCKET DISCONNECTION ----------------- //
 
   socket.on("end", async (data) => {
     //Find user by _id and set the status to Offline
