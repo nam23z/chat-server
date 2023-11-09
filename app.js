@@ -1,8 +1,8 @@
 const express = require("express");
 
+const morgan = require("morgan"); // HTTP request logger middleware for node
 const routes = require("./routes/index");
 
-const morgan = require("morgan"); // HTTP request logger middleware for node
 
 const rateLimit = require("express-rate-limit");
 
@@ -10,11 +10,15 @@ const helmet = require("helmet");
 
 const mongosanitize = require("express-mongo-sanitize");
 
+// const xss = require("xss-clean"); 
+
 const bodyParser = require("body-parser");
 
 // const xss = require("xss");
 
 const cors = require("cors");
+const cookieParser = require("cookie-parser"); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names.
+const session = require("cookie-session"); // Simple cookie-based session middleware.
 
 const app = express();
 
@@ -28,10 +32,23 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
+
 
 app.use(express.json({ limit: "10kb" }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  session({
+    secret: "keyboard cat",
+    proxy: true,
+    resave: true,
+    saveUnintialized: true,
+    cookie: {
+      secure: false,
+    },
+  })
+);
 
 app.use(helmet());
 

@@ -1,6 +1,7 @@
 const FriendRequest = require("../models/friendRequest");
 const User = require("../models/user");
 const filterObj = require("../utils/filterObj");
+const catchAsync = require("../utils/catchAsync");
 
 exports.updateMe = async (req, res, next) => {
   const { user } = req;
@@ -44,6 +45,22 @@ exports.getUsers = async (req, res, next) => {
     message: "Users found successfully!",
   });
 };
+
+exports.getAllVerifiedUsers = catchAsync(async (req, res, next) => {
+  const all_users = await User.find({
+    verified: true,
+  }).select("firstName lastName _id");
+
+  const remaining_users = all_users.filter(
+    (user) => user._id.toString() !== req.user._id.toString()
+  );
+
+  res.status(200).json({
+    status: "success",
+    data: remaining_users,
+    message: "Users found successfully!",
+  });
+});
 
 exports.getRequests = async (req, res, next) => {
   const requests = await FriendRequest.find({
