@@ -41,6 +41,8 @@ build/Release
 node_modules/
 jspm_packages/
 config.env
+firebase-debug.log
+firebase-debug.*.log
 
 # TypeScript v1 declaration files
 typings/
